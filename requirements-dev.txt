@@ -1,0 +1,7 @@
+-r requirements.txt
+pytest==9.1.1
+httpx==0.28.1
+matplotlib==3.11.2
+moto[s3,dynamodb,ssm,iot,iotdata]==5.2.4
+ruff==0.17.1
+cfn-lint==1.58.0

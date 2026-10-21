@@ -1,0 +1,12 @@
+# Runtime (pinned: the evaluation numbers in the README were produced with exactly these)
+numpy==2.5.4
+pandas==3.0.6
+pyarrow==26.0.0
+scikit-learn==1.9.1
+joblib
+pillow==13.0.0
+onnx==1.23.2
+onnxruntime==1.31.0
+fastapi==0.157.0
+uvicorn==0.54.0
+boto3==1.43.116

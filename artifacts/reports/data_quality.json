@@ -1,0 +1,18 @@
+{
+  "images": 4797,
+  "by_class": {
+    "four_wheeler": 2974,
+    "two_wheeler": 1823
+  },
+  "sessions": 31,
+  "session_sizes": [
+    2,
+    120,
+    845
+  ],
+  "exact_duplicates": 12,
+  "near_duplicate_pairs": 609,
+  "near_duplicates_same_session": 0.28735632183908044,
+  "small_crops": 35,
+  "out_of_order_saves": 23
+}

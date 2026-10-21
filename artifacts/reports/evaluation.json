@@ -1,0 +1,348 @@
+{
+  "images": 4785,
+  "sessions": 31,
+  "class_counts": {
+    "light": 1969,
+    "two_wheeler": 1820,
+    "heavy": 618,
+    "medium": 378
+  },
+  "chowk_grouped_cv": {
+    "accuracy": 0.9394,
+    "macro_f1": 0.8844,
+    "f1": {
+      "two_wheeler": 0.9992,
+      "light": 0.9396,
+      "medium": 0.6957,
+      "heavy": 0.9032
+    },
+    "pcu": {
+      "median_session_error": 0.0131,
+      "worst_session_error": 0.0899,
+      "total_bias": -0.0071,
+      "sessions": 26
+    },
+    "confusion": [
+      [
+        1819,
+        1,
+        0,
+        0
+      ],
+      [
+        2,
+        1873,
+        61,
+        33
+      ],
+      [
+        0,
+        107,
+        248,
+        23
+      ],
+      [
+        0,
+        37,
+        26,
+        555
+      ]
+    ]
+  },
+  "chowk_random_cv": {
+    "accuracy": 0.9478,
+    "macro_f1": 0.896,
+    "f1": {
+      "two_wheeler": 1.0,
+      "light": 0.9475,
+      "medium": 0.7105,
+      "heavy": 0.9262
+    },
+    "pcu": {
+      "median_session_error": 0.0155,
+      "worst_session_error": 0.0562,
+      "total_bias": -0.0032,
+      "sessions": 26
+    },
+    "confusion": [
+      [
+        1820,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        1895,
+        50,
+        24
+      ],
+      [
+        0,
+        108,
+        243,
+        27
+      ],
+      [
+        0,
+        28,
+        13,
+        577
+      ]
+    ]
+  },
+  "chowk_class_balanced": {
+    "accuracy": 0.9239,
+    "macro_f1": 0.8697,
+    "f1": {
+      "two_wheeler": 0.9992,
+      "light": 0.9216,
+      "medium": 0.6636,
+      "heavy": 0.8944
+    },
+    "pcu": {
+      "median_session_error": 0.0251,
+      "worst_session_error": 0.1348,
+      "total_bias": 0.0157,
+      "sessions": 26
+    },
+    "confusion": [
+      [
+        1819,
+        1,
+        0,
+        0
+      ],
+      [
+        2,
+        1752,
+        169,
+        46
+      ],
+      [
+        0,
+        60,
+        291,
+        27
+      ],
+      [
+        0,
+        20,
+        39,
+        559
+      ]
+    ]
+  },
+  "zero_shot_best_class": {
+    "accuracy": 0.6322,
+    "macro_f1": 0.4672,
+    "f1": {
+      "two_wheeler": 0.9869,
+      "light": 0.474,
+      "medium": 0.0,
+      "heavy": 0.4078
+    },
+    "pcu": {
+      "median_session_error": 0.4569,
+      "worst_session_error": 1.1655,
+      "total_bias": 0.5472,
+      "sessions": 26
+    },
+    "confusion": [
+      [
+        1806,
+        13,
+        0,
+        1
+      ],
+      [
+        30,
+        652,
+        0,
+        1287
+      ],
+      [
+        2,
+        68,
+        0,
+        308
+      ],
+      [
+        2,
+        49,
+        0,
+        567
+      ]
+    ]
+  },
+  "zero_shot_at_0.25": {
+    "accuracy": 0.4255,
+    "macro_f1": 0.384,
+    "f1": {
+      "two_wheeler": 0.8263,
+      "light": 0.297,
+      "medium": 0.0,
+      "heavy": 0.4127
+    },
+    "pcu": {
+      "median_session_error": 0.1057,
+      "worst_session_error": 0.8202,
+      "total_bias": -0.0534,
+      "sessions": 26
+    },
+    "confusion": [
+      [
+        1282,
+        1,
+        0,
+        0
+      ],
+      [
+        0,
+        352,
+        0,
+        768
+      ],
+      [
+        0,
+        24,
+        0,
+        160
+      ],
+      [
+        1,
+        24,
+        0,
+        402
+      ]
+    ]
+  },
+  "two_classes_only": {
+    "accuracy": 0.7918,
+    "macro_f1": 0.4495,
+    "f1": {
+      "two_wheeler": 1.0,
+      "light": 0.7981,
+      "medium": 0.0,
+      "heavy": 0.0
+    },
+    "pcu": {
+      "median_session_error": 0.2551,
+      "worst_session_error": 0.4681,
+      "total_bias": -0.2679,
+      "sessions": 26
+    },
+    "confusion": [
+      [
+        1820,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        1969,
+        0,
+        0
+      ],
+      [
+        0,
+        378,
+        0,
+        0
+      ],
+      [
+        0,
+        618,
+        0,
+        0
+      ]
+    ]
+  },
+  "c_search": {
+    "0.01": 0.8653,
+    "0.03": 0.8793,
+    "0.1": 0.8844,
+    "0.3": 0.8797,
+    "1.0": 0.8719
+  },
+  "pcu_sensitivity": {
+    "1.0": {
+      "chowk": {
+        "median_session_error": 0.0143,
+        "worst_session_error": 0.1,
+        "total_bias": -0.0029,
+        "sessions": 26
+      },
+      "zero_shot": {
+        "median_session_error": 0.5068,
+        "worst_session_error": 1.3259,
+        "total_bias": 0.605,
+        "sessions": 26
+      },
+      "two_classes": {
+        "median_session_error": 0.2124,
+        "worst_session_error": 0.4681,
+        "total_bias": -0.2406,
+        "sessions": 26
+      }
+    },
+    "1.5": {
+      "chowk": {
+        "median_session_error": 0.0131,
+        "worst_session_error": 0.0899,
+        "total_bias": -0.0071,
+        "sessions": 26
+      },
+      "zero_shot": {
+        "median_session_error": 0.4569,
+        "worst_session_error": 1.1655,
+        "total_bias": 0.5472,
+        "sessions": 26
+      },
+      "two_classes": {
+        "median_session_error": 0.2551,
+        "worst_session_error": 0.4681,
+        "total_bias": -0.2679,
+        "sessions": 26
+      }
+    },
+    "3.0": {
+      "chowk": {
+        "median_session_error": 0.0343,
+        "worst_session_error": 0.1063,
+        "total_bias": -0.018,
+        "sessions": 26
+      },
+      "zero_shot": {
+        "median_session_error": 0.3411,
+        "worst_session_error": 0.7943,
+        "total_bias": 0.3964,
+        "sessions": 26
+      },
+      "two_classes": {
+        "median_session_error": 0.329,
+        "worst_session_error": 0.4826,
+        "total_bias": -0.3393,
+        "sessions": 26
+      }
+    }
+  },
+  "abstain": {
+    "0.45": {
+      "rate": 0.0036,
+      "accuracy_kept": 0.9411,
+      "accuracy_abstained": 0.4706
+    },
+    "0.55": {
+      "rate": 0.0247,
+      "accuracy_kept": 0.9501,
+      "accuracy_abstained": 0.5169
+    },
+    "0.65": {
+      "rate": 0.0531,
+      "accuracy_kept": 0.9598,
+      "accuracy_abstained": 0.5748
+    }
+  }
+}

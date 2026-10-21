@@ -1,0 +1,595 @@
+{
+  "dusk": {
+    "trained_clean": {
+      "accuracy": 0.5068,
+      "macro_f1": 0.4199,
+      "f1": {
+        "two_wheeler": 0.6876,
+        "light": 0.0824,
+        "medium": 0.3009,
+        "heavy": 0.6086
+      },
+      "pcu": {
+        "median_session_error": 0.1989,
+        "worst_session_error": 0.5634,
+        "total_bias": -0.1407,
+        "sessions": 26
+      },
+      "confusion": [
+        [
+          1820,
+          0,
+          0,
+          0
+        ],
+        [
+          1377,
+          85,
+          348,
+          159
+        ],
+        [
+          152,
+          7,
+          150,
+          69
+        ],
+        [
+          125,
+          2,
+          121,
+          370
+        ]
+      ]
+    },
+    "trained_augmented": {
+      "accuracy": 0.8813,
+      "macro_f1": 0.779,
+      "f1": {
+        "two_wheeler": 0.9789,
+        "light": 0.8802,
+        "medium": 0.4613,
+        "heavy": 0.7957
+      },
+      "pcu": {
+        "median_session_error": 0.043,
+        "worst_session_error": 0.117,
+        "total_bias": -0.0242,
+        "sessions": 26
+      },
+      "confusion": [
+        [
+          1763,
+          57,
+          0,
+          0
+        ],
+        [
+          18,
+          1841,
+          43,
+          67
+        ],
+        [
+          1,
+          203,
+          134,
+          40
+        ],
+        [
+          0,
+          113,
+          26,
+          479
+        ]
+      ]
+    },
+    "trained_without_this": {
+      "accuracy": 0.4259,
+      "macro_f1": 0.3576,
+      "f1": {
+        "two_wheeler": 0.8326,
+        "light": 0.0181,
+        "medium": 0.2137,
+        "heavy": 0.3661
+      },
+      "pcu": {
+        "median_session_error": 0.5999,
+        "worst_session_error": 1.6569,
+        "total_bias": 0.8477,
+        "sessions": 26
+      },
+      "confusion": [
+        [
+          1298,
+          0,
+          76,
+          446
+        ],
+        [
+          0,
+          18,
+          629,
+          1322
+        ],
+        [
+          0,
+          2,
+          133,
+          243
+        ],
+        [
+          0,
+          0,
+          29,
+          589
+        ]
+      ]
+    }
+  },
+  "far_away": {
+    "trained_clean": {
+      "accuracy": 0.8435,
+      "macro_f1": 0.7166,
+      "f1": {
+        "two_wheeler": 0.9756,
+        "light": 0.8446,
+        "medium": 0.3881,
+        "heavy": 0.658
+      },
+      "pcu": {
+        "median_session_error": 0.0741,
+        "worst_session_error": 0.5506,
+        "total_bias": 0.0065,
+        "sessions": 26
+      },
+      "confusion": [
+        [
+          1781,
+          33,
+          0,
+          6
+        ],
+        [
+          42,
+          1720,
+          20,
+          187
+        ],
+        [
+          7,
+          199,
+          104,
+          68
+        ],
+        [
+          1,
+          152,
+          34,
+          431
+        ]
+      ]
+    },
+    "trained_augmented": {
+      "accuracy": 0.916,
+      "macro_f1": 0.8398,
+      "f1": {
+        "two_wheeler": 0.9948,
+        "light": 0.9163,
+        "medium": 0.5951,
+        "heavy": 0.853
+      },
+      "pcu": {
+        "median_session_error": 0.0187,
+        "worst_session_error": 0.2979,
+        "total_bias": -0.0104,
+        "sessions": 26
+      },
+      "confusion": [
+        [
+          1802,
+          18,
+          0,
+          0
+        ],
+        [
+          1,
+          1862,
+          55,
+          51
+        ],
+        [
+          0,
+          147,
+          194,
+          37
+        ],
+        [
+          0,
+          68,
+          25,
+          525
+        ]
+      ]
+    },
+    "trained_without_this": {
+      "accuracy": 0.8871,
+      "macro_f1": 0.791,
+      "f1": {
+        "two_wheeler": 0.9869,
+        "light": 0.8932,
+        "medium": 0.5101,
+        "heavy": 0.7739
+      },
+      "pcu": {
+        "median_session_error": 0.0636,
+        "worst_session_error": 0.3379,
+        "total_bias": 0.0522,
+        "sessions": 26
+      },
+      "confusion": [
+        [
+          1775,
+          44,
+          0,
+          1
+        ],
+        [
+          0,
+          1773,
+          43,
+          153
+        ],
+        [
+          0,
+          134,
+          151,
+          93
+        ],
+        [
+          2,
+          50,
+          20,
+          546
+        ]
+      ]
+    }
+  },
+  "dusty_lens": {
+    "trained_clean": {
+      "accuracy": 0.7047,
+      "macro_f1": 0.4765,
+      "f1": {
+        "two_wheeler": 0.8508,
+        "light": 0.7132,
+        "medium": 0.2121,
+        "heavy": 0.1299
+      },
+      "pcu": {
+        "median_session_error": 0.3177,
+        "worst_session_error": 0.5426,
+        "total_bias": -0.2896,
+        "sessions": 26
+      },
+      "confusion": [
+        [
+          1790,
+          30,
+          0,
+          0
+        ],
+        [
+          477,
+          1481,
+          10,
+          1
+        ],
+        [
+          70,
+          250,
+          58,
+          0
+        ],
+        [
+          51,
+          423,
+          101,
+          43
+        ]
+      ]
+    },
+    "trained_augmented": {
+      "accuracy": 0.8924,
+      "macro_f1": 0.8006,
+      "f1": {
+        "two_wheeler": 0.9837,
+        "light": 0.8919,
+        "medium": 0.5023,
+        "heavy": 0.8246
+      },
+      "pcu": {
+        "median_session_error": 0.0401,
+        "worst_session_error": 0.2128,
+        "total_bias": -0.0443,
+        "sessions": 26
+      },
+      "confusion": [
+        [
+          1775,
+          45,
+          0,
+          0
+        ],
+        [
+          13,
+          1864,
+          62,
+          30
+        ],
+        [
+          0,
+          195,
+          161,
+          22
+        ],
+        [
+          1,
+          107,
+          40,
+          470
+        ]
+      ]
+    },
+    "trained_without_this": {
+      "accuracy": 0.8249,
+      "macro_f1": 0.6725,
+      "f1": {
+        "two_wheeler": 0.9563,
+        "light": 0.8369,
+        "medium": 0.3706,
+        "heavy": 0.5262
+      },
+      "pcu": {
+        "median_session_error": 0.1885,
+        "worst_session_error": 0.4894,
+        "total_bias": -0.1708,
+        "sessions": 26
+      },
+      "confusion": [
+        [
+          1804,
+          16,
+          0,
+          0
+        ],
+        [
+          130,
+          1801,
+          38,
+          0
+        ],
+        [
+          9,
+          247,
+          121,
+          1
+        ],
+        [
+          10,
+          271,
+          116,
+          221
+        ]
+      ]
+    }
+  },
+  "low_bitrate": {
+    "trained_clean": {
+      "accuracy": 0.4169,
+      "macro_f1": 0.3589,
+      "f1": {
+        "two_wheeler": 0.7598,
+        "light": 0.207,
+        "medium": 0.1604,
+        "heavy": 0.3084
+      },
+      "pcu": {
+        "median_session_error": 1.0643,
+        "worst_session_error": 1.7143,
+        "total_bias": 1.0824,
+        "sessions": 26
+      },
+      "confusion": [
+        [
+          1115,
+          2,
+          2,
+          701
+        ],
+        [
+          0,
+          228,
+          10,
+          1731
+        ],
+        [
+          0,
+          4,
+          34,
+          340
+        ],
+        [
+          0,
+          0,
+          0,
+          618
+        ]
+      ]
+    },
+    "trained_augmented": {
+      "accuracy": 0.9053,
+      "macro_f1": 0.8201,
+      "f1": {
+        "two_wheeler": 0.992,
+        "light": 0.9067,
+        "medium": 0.5446,
+        "heavy": 0.8372
+      },
+      "pcu": {
+        "median_session_error": 0.0251,
+        "worst_session_error": 0.1702,
+        "total_bias": -0.0047,
+        "sessions": 26
+      },
+      "confusion": [
+        [
+          1797,
+          21,
+          0,
+          2
+        ],
+        [
+          5,
+          1836,
+          62,
+          66
+        ],
+        [
+          0,
+          162,
+          177,
+          39
+        ],
+        [
+          1,
+          62,
+          33,
+          522
+        ]
+      ]
+    },
+    "trained_without_this": {
+      "accuracy": 0.6479,
+      "macro_f1": 0.5508,
+      "f1": {
+        "two_wheeler": 0.9784,
+        "light": 0.5,
+        "medium": 0.2923,
+        "heavy": 0.4324
+      },
+      "pcu": {
+        "median_session_error": 0.5727,
+        "worst_session_error": 1.1573,
+        "total_bias": 0.5793,
+        "sessions": 26
+      },
+      "confusion": [
+        [
+          1744,
+          0,
+          1,
+          75
+        ],
+        [
+          1,
+          675,
+          26,
+          1267
+        ],
+        [
+          0,
+          53,
+          70,
+          255
+        ],
+        [
+          0,
+          3,
+          4,
+          611
+        ]
+      ]
+    }
+  },
+  "clean": {
+    "trained_augmented": {
+      "accuracy": 0.9243,
+      "macro_f1": 0.862,
+      "f1": {
+        "two_wheeler": 0.9967,
+        "light": 0.9238,
+        "medium": 0.662,
+        "heavy": 0.8656
+      },
+      "pcu": {
+        "median_session_error": 0.019,
+        "worst_session_error": 0.1311,
+        "total_bias": -0.0092,
+        "sessions": 26
+      },
+      "confusion": [
+        [
+          1809,
+          11,
+          0,
+          0
+        ],
+        [
+          0,
+          1848,
+          80,
+          41
+        ],
+        [
+          0,
+          107,
+          238,
+          33
+        ],
+        [
+          1,
+          66,
+          23,
+          528
+        ]
+      ]
+    }
+  },
+  "input_checks": {
+    "clean": {
+      "any": 0.04,
+      "dark": 0.016,
+      "low_contrast": 0.008,
+      "blurry": 0.016,
+      "compressed": 0.006
+    },
+    "dusk": {
+      "any": 1.0,
+      "dark": 1.0,
+      "low_contrast": 1.0,
+      "blurry": 0.888,
+      "compressed": 0.0
+    },
+    "far_away": {
+      "any": 0.794,
+      "dark": 0.016,
+      "low_contrast": 0.028,
+      "blurry": 0.794,
+      "compressed": 0.0
+    },
+    "dusty_lens": {
+      "any": 0.982,
+      "dark": 0.0,
+      "low_contrast": 0.354,
+      "blurry": 0.982,
+      "compressed": 0.0
+    },
+    "low_bitrate": {
+      "any": 0.996,
+      "dark": 0.014,
+      "low_contrast": 0.01,
+      "blurry": 0.016,
+      "compressed": 0.996
+    }
+  }
+}
