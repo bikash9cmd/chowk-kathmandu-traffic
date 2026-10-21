@@ -1,0 +1,26 @@
+{
+  "_note": "Approach geometry (lanes, green ratio, saturation flow) is ILLUSTRATIVE: plausible values for a demo, not surveyed. Replace with Department of Roads / KVTPO survey values before using a congestion level for anything.",
+  "junctions": {
+    "maitighar": {
+      "name": "Maitighar Mandala, Kathmandu",
+      "approaches": {
+        "from_thapathali": {"lanes": 2, "green_ratio": 0.35, "saturation_pcu_per_lane_hour": 1500},
+        "from_babarmahal": {"lanes": 2, "green_ratio": 0.30, "saturation_pcu_per_lane_hour": 1500}
+      }
+    },
+    "kalanki": {
+      "name": "Kalanki Chowk, Kathmandu",
+      "approaches": {
+        "from_ringroad_south": {"lanes": 3, "green_ratio": 0.30, "saturation_pcu_per_lane_hour": 1500},
+        "from_naubise": {"lanes": 2, "green_ratio": 0.25, "saturation_pcu_per_lane_hour": 1400}
+      }
+    },
+    "koteshwor": {
+      "name": "Koteshwor Chowk, Kathmandu",
+      "approaches": {
+        "from_airport": {"lanes": 3, "green_ratio": 0.30, "saturation_pcu_per_lane_hour": 1500},
+        "from_bhaktapur": {"lanes": 3, "green_ratio": 0.30, "saturation_pcu_per_lane_hour": 1500}
+      }
+    }
+  }
+}

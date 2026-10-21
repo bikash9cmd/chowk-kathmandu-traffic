@@ -1,0 +1,403 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Chowk - 15-minute vehicle-mix counts in PCU for Kathmandu junctions. The ML runs on the camera
+  box; AWS receives a few hundred bytes per approach every 15 minutes. Deploy: see infra/README.md.
+  Estimated cost: docs/COST.md.
+
+Parameters:
+  OpsEmail:
+    Type: String
+    Default: ""
+    Description: Optional email for operational alarms and the budget warning.
+  MonthlyBudgetUsd:
+    Type: Number
+    Default: 10
+
+Conditions:
+  HasOpsEmail: !Not [!Equals [!Ref OpsEmail, ""]]
+
+Globals:
+  Function:
+    # Graviton: about 20% cheaper per GB-second than x86 for the same work.
+    Architectures: [arm64]
+    Tracing: Active
+    Environment:
+      Variables:
+        DATA_BUCKET: !Ref DataBucket
+        FLOWS_TABLE: !Ref FlowsTable
+        CHAMPION_PARAM: !Ref ChampionParam
+
+Resources:
+  # ---------------- storage ----------------
+  DataBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault: {SSEAlgorithm: AES256}
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration: {Status: Enabled}
+      LifecycleConfiguration:
+        Rules:
+          # Review crops are a few KB each and only useful until they are labelled.
+          # They can show faces and number plates, so they must not be kept indefinitely.
+          - Id: expire-review-crops
+            Status: Enabled
+            Prefix: review/
+            ExpirationInDays: 90
+            NoncurrentVersionExpiration: {NoncurrentDays: 7}
+          - Id: expire-old-models
+            Status: Enabled
+            Prefix: models/
+            NoncurrentVersionExpiration: {NoncurrentDays: 90}
+          # No IA/Glacier transition for flows/: objects are ~400 bytes, far below the 128 KB minimum
+          # billable size for IA, so a transition would cost more than it saves. Compaction into
+          # daily Parquet files is the fix if the archive ever matters (docs/COST.md).
+
+  FlowsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - {AttributeName: pk, AttributeType: S}
+        - {AttributeName: sk, AttributeType: S}
+      KeySchema:
+        - {AttributeName: pk, KeyType: HASH}   # junction#approach
+        - {AttributeName: sk, KeyType: RANGE}  # interval_start
+      TimeToLiveSpecification: {AttributeName: expires_at, Enabled: true}
+      # The S3 archive can rebuild this table, so PITR is not needed.
+      PointInTimeRecoverySpecification: {PointInTimeRecoveryEnabled: false}
+
+  ChampionParam:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /chowk/champion-model-version
+      Type: String
+      Value: bootstrap
+      Description: Version under models/ that cameras should run. Change it (and publish) to roll back.
+
+  # ---------------- camera fleet (AWS IoT Core) ----------------
+  # Each camera box is an IoT thing with its own X.509 certificate. It may only publish its own
+  # flows and only read the model-update topic.
+  CameraPolicy:
+    Type: AWS::IoT::Policy
+    Properties:
+      PolicyName: chowk-camera
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: iot:Connect
+            Resource: !Sub "arn:${AWS::Partition}:iot:${AWS::Region}:${AWS::AccountId}:client/${!iot:Connection.Thing.ThingName}"
+          # Cameras publish through Basic Ingest ($aws/rules/<rule>/...): straight into the rule, no
+          # broker fan-out, and no IoT messaging charge (docs/COST.md).
+          - Effect: Allow
+            Action: iot:Publish
+            Resource: !Sub "arn:${AWS::Partition}:iot:${AWS::Region}:${AWS::AccountId}:topic/$aws/rules/chowk_flows/chowk/flows/${!iot:Connection.Thing.ThingName}"
+          - Effect: Allow
+            Action: iot:Subscribe
+            Resource: !Sub "arn:${AWS::Partition}:iot:${AWS::Region}:${AWS::AccountId}:topicfilter/chowk/model/champion"
+          - Effect: Allow
+            Action: iot:Receive
+            Resource: !Sub "arn:${AWS::Partition}:iot:${AWS::Region}:${AWS::AccountId}:topic/chowk/model/champion"
+          - Effect: Allow
+            Action: iot:AssumeRoleWithCertificate
+            Resource: !GetAtt CameraRoleAlias.RoleAliasArn
+
+  # Cameras swap their certificate for short-lived IAM credentials (IoT credentials provider) to
+  # upload review crops and download models. No long-lived AWS keys on a box on a pole.
+  CameraRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: {Service: credentials.iot.amazonaws.com}
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: review-upload-model-download
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: s3:PutObject
+                Resource: !Sub "${DataBucket.Arn}/review/${!credentials-iot:ThingName}/*"
+              - Effect: Allow
+                Action: s3:GetObject
+                Resource: !Sub "${DataBucket.Arn}/models/*"
+
+  CameraRoleAlias:
+    Type: AWS::IoT::RoleAlias
+    Properties:
+      RoleAlias: chowk-camera
+      RoleArn: !GetAtt CameraRole.Arn
+      CredentialDurationSeconds: 3600
+
+  FlowsRule:
+    Type: AWS::IoT::TopicRule
+    Properties:
+      RuleName: chowk_flows
+      TopicRulePayload:
+        # topic(3) is the thing name; the camera policy only lets a box publish on its own topic.
+        Sql: "SELECT *, topic(3) AS camera FROM 'chowk/flows/+'"
+        AwsIotSqlVersion: "2016-03-23"
+        RuleDisabled: false
+        Actions:
+          - Lambda: {FunctionArn: !GetAtt IngestFunction.Arn}
+        # If Lambda can't be invoked, the record lands in S3 instead of disappearing.
+        ErrorAction:
+          S3:
+            BucketName: !Ref DataBucket
+            Key: "errors/${topic()}/${timestamp()}.json"
+            RoleArn: !GetAtt RuleErrorRole.Arn
+
+  RuleErrorRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: {Service: iot.amazonaws.com}
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: write-errors
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: s3:PutObject
+                Resource: !Sub "${DataBucket.Arn}/errors/*"
+
+  IngestInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref IngestFunction
+      Action: lambda:InvokeFunction
+      Principal: iot.amazonaws.com
+      SourceArn: !GetAtt FlowsRule.Arn
+
+  # ---------------- compute ----------------
+  OpsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: chowk-ops
+
+  OpsEmailSubscription:
+    Type: AWS::SNS::Subscription
+    Condition: HasOpsEmail
+    Properties: {TopicArn: !Ref OpsTopic, Protocol: email, Endpoint: !Ref OpsEmail}
+
+  SchedulerDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      MessageRetentionPeriod: 1209600
+
+  IngestFunction:
+    Type: AWS::Serverless::Function
+    Metadata: {DockerContext: .., Dockerfile: infra/Dockerfile.lambda, DockerTag: v1}
+    Properties:
+      PackageType: Image
+      ImageConfig: {Command: ["chowk.aws.handlers.ingest_handler"]}
+      MemorySize: 256
+      Timeout: 10
+      Policies:
+        - S3WritePolicy: {BucketName: !Ref DataBucket}
+        - DynamoDBCrudPolicy: {TableName: !Ref FlowsTable}
+
+  WatchdogFunction:
+    Type: AWS::Serverless::Function
+    Metadata: {DockerContext: .., Dockerfile: infra/Dockerfile.lambda, DockerTag: v1}
+    Properties:
+      PackageType: Image
+      ImageConfig: {Command: ["chowk.aws.handlers.watchdog_handler"]}
+      MemorySize: 256
+      Timeout: 30
+      Policies:
+        - S3ReadPolicy: {BucketName: !Ref DataBucket}
+        - DynamoDBReadPolicy: {TableName: !Ref FlowsTable}
+      Events:
+        Every15Minutes:
+          Type: ScheduleV2
+          Properties:
+            ScheduleExpression: rate(15 minutes)
+            RetryPolicy: {MaximumRetryAttempts: 1, MaximumEventAgeInSeconds: 600}
+            DeadLetterConfig: {Arn: !GetAtt SchedulerDLQ.Arn}
+
+  RetrainFunction:
+    Type: AWS::Serverless::Function
+    Metadata: {DockerContext: .., Dockerfile: infra/Dockerfile.lambda, DockerTag: v1}
+    Properties:
+      PackageType: Image
+      ImageConfig: {Command: ["chowk.aws.handlers.retrain_handler"]}
+      # Five-fold CV of a 256-feature logistic regression on ~5k rows takes seconds. Lambda, not a
+      # SageMaker training job (docs/ALTERNATIVES.md, ADR-005).
+      MemorySize: 2048
+      Timeout: 300
+      Policies:
+        - S3CrudPolicy: {BucketName: !Ref DataBucket}
+        - SSMParameterReadPolicy: {ParameterName: chowk/champion-model-version}
+        - Statement:
+            - Effect: Allow
+              Action: ssm:PutParameter
+              Resource: !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/chowk/champion-model-version"
+            - Effect: Allow
+              Action: iot:Publish
+              Resource: !Sub "arn:${AWS::Partition}:iot:${AWS::Region}:${AWS::AccountId}:topic/chowk/model/champion"
+            - Effect: Allow
+              Action: iot:RetainPublish
+              Resource: !Sub "arn:${AWS::Partition}:iot:${AWS::Region}:${AWS::AccountId}:topic/chowk/model/champion"
+      Events:
+        Weekly:
+          Type: ScheduleV2
+          Properties:
+            # Friday 20:15 UTC = Saturday 02:00 Nepal time: no traffic to miscount if a camera reloads.
+            ScheduleExpression: cron(15 20 ? * FRI *)
+            DeadLetterConfig: {Arn: !GetAtt SchedulerDLQ.Arn}
+
+  ApiFunction:
+    Type: AWS::Serverless::Function
+    Metadata: {DockerContext: .., Dockerfile: infra/Dockerfile.lambda, DockerTag: v1}
+    Properties:
+      PackageType: Image
+      ImageConfig: {Command: ["chowk.aws.handlers.api_handler"]}
+      MemorySize: 256
+      Timeout: 10
+      Policies:
+        - DynamoDBReadPolicy: {TableName: !Ref FlowsTable}
+        - S3ReadPolicy: {BucketName: !Ref DataBucket}
+      Events:
+        Now:
+          Type: HttpApi
+          Properties: {ApiId: !Ref HttpApi, Path: "/junctions/{junction}/now", Method: GET}
+        Flows:
+          Type: HttpApi
+          Properties: {ApiId: !Ref HttpApi, Path: "/junctions/{junction}/{approach}/flows", Method: GET}
+        Health:
+          Type: HttpApi
+          Properties: {ApiId: !Ref HttpApi, Path: /health, Method: GET}
+
+  HttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      # Flows change every 15 minutes; throttle so a scraper can't run up the bill.
+      DefaultRouteSettings: {ThrottlingBurstLimit: 20, ThrottlingRateLimit: 10}
+
+  # Log retention: CloudWatch keeps logs forever by default, which is a slow cost leak.
+  IngestLogs:
+    Type: AWS::Logs::LogGroup
+    Properties: {LogGroupName: !Sub "/aws/lambda/${IngestFunction}", RetentionInDays: 14}
+  WatchdogLogs:
+    Type: AWS::Logs::LogGroup
+    Properties: {LogGroupName: !Sub "/aws/lambda/${WatchdogFunction}", RetentionInDays: 14}
+  RetrainLogs:
+    Type: AWS::Logs::LogGroup
+    Properties: {LogGroupName: !Sub "/aws/lambda/${RetrainFunction}", RetentionInDays: 30}
+  ApiLogs:
+    Type: AWS::Logs::LogGroup
+    Properties: {LogGroupName: !Sub "/aws/lambda/${ApiFunction}", RetentionInDays: 7}
+
+  # ---------------- alarms ----------------
+  StaleCameraAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: At least one approach has sent no record for 35+ minutes, two watchdog runs in a row.
+      Namespace: Chowk
+      MetricName: StaleApproaches
+      Statistic: Maximum
+      Period: 900
+      EvaluationPeriods: 2
+      DatapointsToAlarm: 2
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: breaching  # no metric at all means the watchdog itself stopped
+      AlarmActions: [!Ref OpsTopic]
+
+  RejectedRecordsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Cameras are sending records that fail validation (clock drift, bad firmware, tampering).
+      Namespace: Chowk
+      MetricName: RecordsRejected
+      Statistic: Sum
+      Period: 3600
+      EvaluationPeriods: 1
+      Threshold: 5
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref OpsTopic]
+
+  IngestErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Ingest Lambda is failing; records are going to s3://bucket/errors/ instead of the table.
+      Namespace: AWS/Lambda
+      MetricName: Errors
+      Dimensions: [{Name: FunctionName, Value: !Ref IngestFunction}]
+      Statistic: Sum
+      Period: 900
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref OpsTopic]
+
+  RetrainGateAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Weekly retrain was rejected by the promotion gate; cameras keep the old model.
+      Namespace: Chowk
+      MetricName: RetrainGatePassed
+      Statistic: Minimum
+      Period: 86400
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: LessThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref OpsTopic]
+
+  DLQNotEmptyAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: A scheduled run was dropped after all retries.
+      Namespace: AWS/SQS
+      MetricName: ApproximateNumberOfMessagesVisible
+      Dimensions: [{Name: QueueName, Value: !GetAtt SchedulerDLQ.QueueName}]
+      Statistic: Maximum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      AlarmActions: [!Ref OpsTopic]
+
+  # ---------------- cost guardrail ----------------
+  MonthlyBudget:
+    Type: AWS::Budgets::Budget
+    Condition: HasOpsEmail
+    Properties:
+      Budget:
+        BudgetName: chowk-monthly
+        BudgetType: COST
+        TimeUnit: MONTHLY
+        BudgetLimit: {Amount: !Ref MonthlyBudgetUsd, Unit: USD}
+      NotificationsWithSubscribers:
+        - Notification: {NotificationType: ACTUAL, ComparisonOperator: GREATER_THAN, Threshold: 80}
+          Subscribers: [{SubscriptionType: EMAIL, Address: !Ref OpsEmail}]
+        - Notification: {NotificationType: FORECASTED, ComparisonOperator: GREATER_THAN, Threshold: 100}
+          Subscribers: [{SubscriptionType: EMAIL, Address: !Ref OpsEmail}]
+
+Outputs:
+  ApiUrl:
+    Value: !Sub "https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com"
+  DataBucketName:
+    Value: !Ref DataBucket
+  CameraPolicyName:
+    Value: !Ref CameraPolicy
+  CameraRoleAlias:
+    Value: !Ref CameraRoleAlias

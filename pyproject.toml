@@ -1,0 +1,22 @@
+[project]
+name = "chowk"
+version = "1.0.0"
+description = "Vehicle-mix counts in Passenger Car Units for Kathmandu junctions, from cheap cameras"
+requires-python = ">=3.12"
+readme = "README.md"
+license = {text = "MIT"}
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "S"]
+ignore = ["S101"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

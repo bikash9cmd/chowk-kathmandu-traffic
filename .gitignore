@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+data/raw/*
+!data/raw/.gitkeep
+artifacts/*
+!artifacts/reports/
+artifacts/reports/*
+!artifacts/reports/evaluation.json
+!artifacts/reports/robustness.json
+!artifacts/reports/data_quality.json
+certs/
+.aws-sam/
+samconfig.toml
