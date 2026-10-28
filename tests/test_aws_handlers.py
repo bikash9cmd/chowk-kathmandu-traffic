@@ -56,6 +56,8 @@ def test_valid_record_is_archived_and_stored_once(aws):
     ({"counts": {"tempo": 3}}, "unknown classes"),
     ({"interval_start": "2026-10-01T08:07:00"}, "15-minute boundary"),
     ({"interval_start": "2999-01-01T08:00:00"}, "future"),
+    ({"interval_start": "2026-10-01T08:00:00+05:45"}, "without a UTC offset"),
+    ({"interval_start": "2026-10-01T02:15:00Z"}, "without a UTC offset"),
     ({"minutes_observed": 0}, "out of range"),
     ({"junction": None}, "missing"),
     ({"image_quality": {"dark": 3}}, "image_quality"),
@@ -64,6 +66,13 @@ def test_valid_record_is_archived_and_stored_once(aws):
 def test_bad_records_are_rejected(aws, over, reason):
     out = handlers.ingest_handler(record(**over))
     assert not out["accepted"] and any(reason in p for p in out["problems"])
+
+
+def test_rejected_record_is_not_stored(aws):
+    out = handlers.ingest_handler(record(interval_start="2026-10-01T08:00:00+05:45"))
+    assert not out["accepted"]
+    assert "Contents" not in aws.list_objects_v2(Bucket=BUCKET, Prefix="flows/")
+    assert boto3.client("dynamodb").scan(TableName=TABLE)["Count"] == 0
 
 
 def test_camera_may_report_for_its_own_junction(aws):
