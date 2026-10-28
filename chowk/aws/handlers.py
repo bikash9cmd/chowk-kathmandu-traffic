@@ -84,10 +84,15 @@ def validate(record: dict) -> list[str]:
         problems.append("minutes_observed out of range")
     try:
         start = datetime.fromisoformat(record["interval_start"])
-        if start.minute % config.FLOW_INTERVAL_MINUTES or start.second:
-            problems.append("interval_start not on a 15-minute boundary")
-        if start > _now_npt() + timedelta(minutes=5):
-            problems.append("interval_start in the future (camera clock wrong?)")
+        # interval_start is the DynamoDB sort key and is compared as text, so every camera must send
+        # the same naive Nepal-time format. An offset ("+05:45", "Z") would also break the clock check.
+        if start.tzinfo is not None:
+            problems.append("interval_start must be naive Nepal local time, without a UTC offset")
+        else:
+            if start.minute % config.FLOW_INTERVAL_MINUTES or start.second:
+                problems.append("interval_start not on a 15-minute boundary")
+            if start > _now_npt() + timedelta(minutes=5):
+                problems.append("interval_start in the future (camera clock wrong?)")
     except ValueError:
         problems.append("interval_start is not ISO 8601")
     if not problems:
