@@ -1,5 +1,7 @@
 # Chowk (चोक): vehicle-mix traffic counts for Kathmandu junctions
 
+[![Try it live](https://img.shields.io/badge/Try_it-live-2ea44f?style=for-the-badge)](https://chowk-kathmandu-traffic.onrender.com)
+
 Chowk counts the traffic through a Kathmandu junction by vehicle type and turns it into **Passenger Car Units (PCU)**, the unit traffic engineers use for signal timing and road capacity. A small model runs on a camera box at the junction; only a few hundred bytes of counts leave it every 15 minutes. It is trained and tested on real crops from 30 Kathmandu street videos, and the cloud side is designed for AWS at about **$5.70 a month for 20 junctions**.
 
 ```text
@@ -94,6 +96,16 @@ flowchart LR
 | Performance efficiency | Inference at the edge (24 ms per 720p frame on one CPU core); features reused from the detector, so the classifier adds microseconds; DynamoDB key design matches the only two queries |
 | Cost optimisation | Basic Ingest (no messaging charge); container Lambdas on Graviton; on-demand DynamoDB; HTTP API; S3 lifecycle; budget alarm. $5.66/month for 20 junctions |
 | Sustainability | No video upload, no GPU, no always-on endpoint; a 0.9M-parameter detector and a logistic regression |
+
+## Try it live
+
+**[https://chowk-kathmandu-traffic.onrender.com](https://chowk-kathmandu-traffic.onrender.com)**
+
+Upload a photo of a vehicle (or pick a crop from the dataset) and see its PCU class next to what an off-the-shelf detector says, then browse every recorded session as 15-minute flows.
+
+It runs on a free server that sleeps when nobody is using it, so the first visit can take a minute to wake up. Everything runs offline: no API keys, no cloud account.
+
+To run the same page locally: `pip install -r requirements-app.txt` and then `streamlit run app.py`.
 
 ## Run it
 
