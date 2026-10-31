@@ -12,12 +12,13 @@ import pandas as pd
 import streamlit as st
 from PIL import Image
 
+import brand
 from chowk import config, data, features, model
 from chowk.detector import Detector, zero_shot_class
 from chowk.pipeline import replay_sessions
 from chowk.store import LocalStore
 
-st.set_page_config(page_title="Chowk", page_icon="🚦", layout="wide")
+brand.page("chowk")
 
 CHAMPION = config.ARTIFACT_DIR / "models" / "champion"
 NAMES = {
@@ -44,8 +45,6 @@ def load():
 
 df, X, clf, meta, detector = load()
 
-st.title("Chowk (चोक)")
-st.caption("Vehicle-mix traffic counts for Kathmandu junctions, in Passenger Car Units (PCU).")
 
 classify, replay = st.tabs(["Classify a vehicle", "Recorded sessions as 15-minute flows"])
 
@@ -98,3 +97,5 @@ with replay:
         p = config.ROOT / "docs" / "img" / name
         if p.exists():
             st.image(str(p))
+
+brand.footer()
